@@ -7,11 +7,11 @@ module Users
     end
 
     def call
-      user_params = yield validate_user_params
-      shop_params = yield validate_shop_params
+      validated_user_params = yield validate_user_params
+      validated_shop_params = yield validate_shop_params
       ActiveRecord::Base.transaction do
-        shop = yield create_shop(shop_params)
-        user = yield create_user(shop, user_params)
+        shop = yield create_shop(validated_shop_params)
+        user = yield create_user(shop, validated_user_params)
 
         RegistrationMailer.with(user:).welcome_email.deliver_later
 
@@ -31,13 +31,13 @@ module Users
       result.success? ? Success(result) : Failure(result.errors.to_h)
     end
 
-    def create_shop(shop_params)
-      shop = Shop.new(industry_id: shop_params[:industry_id], name: shop_params[:name])
+    def create_shop(validated_shop_params)
+      shop = Shop.new(industry_id: validated_shop_params[:industry_id], name: validated_shop_params[:name])
       shop.save ? Success(shop) : Failure(shop.errors.full_messages.join(', '))
     end
 
-    def create_user(shop, user_params)
-      user = User.new(shop:, name: user_params[:name], email: user_params[:email])
+    def create_user(shop, validated_user_params)
+      user = User.new(shop:, name: validated_user_params[:name], email: validated_user_params[:email])
       user.save ? Success(user) : Failure(user.errors.full_messages.join(', '))
     end
   end
