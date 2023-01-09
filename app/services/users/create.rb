@@ -13,7 +13,6 @@ module Users
         shop = yield create_shop(shop_params)
         user = yield create_user(shop, user_params)
 
-        # send email
         RegistrationMailer.with(user:).welcome_email.deliver_later
 
         Success({ user:, shop:, message: 'User registered successfully' })
