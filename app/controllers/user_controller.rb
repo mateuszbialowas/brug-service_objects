@@ -2,7 +2,14 @@
 
 class UserController < ApplicationController
   def create
-    # TODO: write your code here. You can inspire by this code: https://github.com/mateuszbialowas/brug-service_objects/pull/1/files
+    user_create = Users::Create.call(user_params:, shop_params:)
+    if user_create.success?
+      flash.now[:notice] = "User created. Happy now? I hope so."
+      render 'user/create', locals: { user: user_create.result[:user], shop: user_create.result[:shop] }
+    else
+      flash.now[:error] = result.errors
+      render 'user/new'
+    end
   end
 
   private
