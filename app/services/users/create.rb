@@ -12,19 +12,16 @@ module Users
 
       shop_validation = validate_shop_params
       return shop_validation if shop_validation.failure?
-      begin
-        ActiveRecord::Base.transaction do
-          shop = create_shop(@shop_params)
-          raise StandardError.new shop.failure if shop.failure?
+      # begin
+      ActiveRecord::Base.transaction do
+        shop = create_shop(@shop_params)
+        return shop if shop.failure?
 
-          user = create_user(shop.success, @user_params)
-          raise StandardError.new user.failure if user.failure?
+        user = create_user(shop.success, @user_params)
+        return user if user.failure?
 
-          RegistrationMailer.with(user: user.success).welcome_email.deliver_later
-          Success({ user: user.success, shop: shop.success, message: 'User registered successfully' })
-        end
-      rescue StandardError => exception
-        return Failure(exception.message)
+        RegistrationMailer.with(user: user.success).welcome_email.deliver_later
+        Success({ user: user.success, shop: shop.success, message: 'User registered successfully' })
       end
 
     end
