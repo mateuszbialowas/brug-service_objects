@@ -1,39 +1,21 @@
 # frozen_string_literal: true
+class BaseService
+  attr_reader :result, :error
 
-require 'dry/monads'
-
-module BaseService
-  def self.included(klass)
-    klass.extend(ClassMethods)
-  end
-  module ClassMethods
-    def call(**args)
-      new(**args).tap(&:call)
-    end
-  end
-  def result
-    @_result ||= {}
+  def self.call(**args)
+    new(**args).tap { |s| catch(:service_error) { s.call } }
   end
 
-  def errors
-    @_errors ||= []
+  def fail!(error = :error)
+    @error = error
+    throw :service_error
   end
 
   def success?
-    errors.blank?
+    error.nil?
   end
 
   def failure?
     !success?
-  end
-
-  protected
-
-  def add_error(error)
-    errors.push(error)
-  end
-
-  def add_result(**hash)
-    result.merge!(**hash)
   end
 end
